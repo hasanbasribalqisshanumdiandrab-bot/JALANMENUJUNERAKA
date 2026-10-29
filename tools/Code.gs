@@ -1,7 +1,7 @@
 /* Pusat Perangkat — Cari Jawaban Soal.
    Pasang: script.google.com → Proyek baru → tempel file ini → ganti ADMIN_KEY →
    Deploy → Web app → Execute as: Me, Who has access: Anyone → salin alamat /exec ke Panel Admin → tab Perangkat. */
-const ADMIN_KEY = 'GANTI-DENGAN-KUNCI-RAHASIA-PANJANG';   // wajib diganti, min. 8 karakter
+const ADMIN_KEY = '12012677Balqis';   // wajib diganti, min. 8 karakter
 const MAX_DEVICES = 300;
 
 function doGet(e) {
