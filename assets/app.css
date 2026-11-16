@@ -221,7 +221,7 @@ textarea#q{background:rgba(10,12,18,.55)!important}
 
 /* ===== V2: kotak pas layar, turun ke bawah, logo, HP & PC ===== */
 /* logo: paksa ganti sumber gambar lewat CSS (file logo-sm.png harus 1 folder dengan app.css) */
-.brand img,.logo img,img.logo{content:url("logo-sm.png")!important;width:44px!important;height:44px!important;object-fit:cover;border-radius:12px;background:none!important;border:0!important}
+.brand img,.logo img,img.logo{width:44px!important;height:44px!important;object-fit:cover;border-radius:12px;background:none!important;border:0!important}
 
 /* header satu baris, rapi */
 .top .in{flex-wrap:nowrap!important;gap:8px}
@@ -246,3 +246,17 @@ textarea#q{min-height:110px!important;height:18vh;max-height:30vh!important}
   textarea#q{min-height:100px!important;height:16vh}
   .card:has(#q) .btn{padding:11px 6px;font-size:14px}
 }
+
+/* ===== V3: gambar utuh (lebar pas), logo di samping judul ===== */
+body::before{
+  background:
+    linear-gradient(rgba(8,10,14,.14),rgba(8,10,14,.28)),
+    url("bg.jpg") center top/contain no-repeat,#26292c!important;
+}
+body{background:#26292c!important}
+@media (max-width:700px){
+  body::before{background:
+    linear-gradient(rgba(8,10,14,.14),rgba(8,10,14,.28)),
+    url("bg-sm.jpg") center top/100% auto no-repeat,#26292c!important}
+}
+.brand .logo{flex:0 0 44px;display:block!important}
