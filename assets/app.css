@@ -199,3 +199,17 @@ kbd{background:var(--panel2);border:1px solid var(--line2);border-radius:5px;pad
 .page{display:block!important;max-width:860px}
 #q{min-height:200px;font-size:16px}
 .hidden{display:none!important}
+
+/* ===== Logo sebagai latar seluruh web (HP: mengikuti ukuran HP, PC: melebar mengikuti layar) ===== */
+html{background:#15171a}
+body{background:transparent}
+body::before{content:"";position:fixed;inset:0;z-index:-1;
+  background:linear-gradient(rgba(8,9,12,.50),rgba(8,9,12,.62)),url(bg.jpg) center 28%/cover no-repeat;background-color:#15171a}
+@media (max-width:760px){body::before{background:linear-gradient(rgba(8,9,12,.45),rgba(8,9,12,.58)),url(bg-sm.jpg) center top/cover no-repeat}}
+#login{background:rgba(8,9,12,.35)}
+#login::before{display:none}
+/* kotak pencarian & hasil dibuat bening agar logo tetap terlihat */
+#app .card{background:rgba(14,16,22,.66);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px)}
+#app .card.res{background:rgba(14,16,22,.84)}
+textarea#q{background:rgba(8,10,14,.55)}
+.top{background:rgba(10,12,16,.72)}
