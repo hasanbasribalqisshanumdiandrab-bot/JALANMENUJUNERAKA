@@ -285,3 +285,22 @@ body{background:#26292c!important}
   .lg .info h3{font-size:22px}
   .lg .form{margin-top:8px}
 }
+
+/* ===== V5: login = logo transparan di belakang, hanya garis & tulisan ===== */
+#login{background:#0d0f14!important}
+#login>div{position:relative}
+.lglogo{position:absolute!important;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(520px,92vw)!important;max-width:none;margin:0!important;
+  opacity:.30;mix-blend-mode:normal!important;pointer-events:none;z-index:0}
+.lg{position:relative;z-index:1;background:none!important;border:0!important;box-shadow:none!important;height:auto!important;min-height:0;overflow:visible}
+.lg .form,.lg .info{background:none!important;backdrop-filter:none!important;border-radius:0!important;box-shadow:none!important;border:0!important}
+.lg .info,.lg h2,.lg .sw,.lg .note,.lg .msg,.lg label{text-shadow:0 2px 8px #000,0 0 3px #000}
+/* tombol: hanya garis */
+.lg .go{background:transparent!important;box-shadow:none!important;border:2px solid var(--acc)!important;color:#ffb066!important}
+.lg .go:hover:not(:disabled){background:rgba(255,106,43,.18)!important}
+@media (max-width:760px){
+  #login{align-items:center}
+  .lg{display:flex;flex-direction:column}
+  .lg .info{order:0;text-align:center!important;align-items:center!important;padding:14px 20px 4px!important}
+  .lg .form{padding:14px 20px!important;margin:0!important}
+}
