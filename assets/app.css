@@ -304,3 +304,25 @@ body{background:#26292c!important}
   .lg .info{order:0;text-align:center!important;align-items:center!important;padding:14px 20px 4px!important}
   .lg .form{padding:14px 20px!important;margin:0!important}
 }
+
+/* ===== V6: logo tegas di belakang, tulisan di atasnya, tata letak 1 kolom semua perangkat ===== */
+#login{overflow-x:hidden!important;overflow-y:auto}
+#login>div{position:relative;z-index:1;max-width:460px;margin:0 auto}
+.lglogo{position:fixed!important;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(560px,94vw,78vh)!important;width:min(560px,94vw,78dvh)!important;height:auto;
+  opacity:.6!important;z-index:0;pointer-events:none}
+.lg{display:flex!important;flex-direction:column;align-items:stretch;width:100%!important}
+.lg .info,.lg .form{position:relative!important;top:auto;bottom:auto;left:auto!important;right:auto!important;width:100%!important;
+  transform:none!important;filter:none!important;padding:10px 18px!important;text-align:center!important;align-items:center!important}
+.lg .info{order:-1}
+.lg .info.i-admin,.lg .form.admin{display:none}
+.lg.active .info.i-team,.lg.active .form.team{display:none}
+.lg.active .info.i-admin,.lg.active .form.admin{display:flex;opacity:1;pointer-events:auto}
+.lg .form{max-width:380px;margin:0 auto}
+.lg .field,.lg .go{width:100%}
+/* hapus paragraf penjelasan */
+.lg .info p{display:none!important}
+/* ganti WELCOME BACK -> PENGHUNI NERAKA */
+.lg .info.i-team h3{font-size:0!important;line-height:0;margin:0 0 6px}
+.lg .info.i-team h3::after{content:"PENGHUNI NERAKA";display:block;font-size:clamp(26px,7vw,40px);line-height:1.1;
+  letter-spacing:2px;color:#ffb066;text-shadow:0 3px 12px #000,0 0 4px #000}
