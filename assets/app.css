@@ -326,3 +326,7 @@ body{background:#26292c!important}
 .lg .info.i-team h3{font-size:0!important;line-height:0;margin:0 0 6px}
 .lg .info.i-team h3::after{content:"PENGHUNI NERAKA";display:block;font-size:clamp(26px,7vw,40px);line-height:1.1;
   letter-spacing:2px;color:#ffb066;text-shadow:0 3px 12px #000,0 0 4px #000}
+
+/* ===== V7: hilangkan judul PENGHUNI NERAKA ===== */
+.lg .info.i-team{display:none!important}
+.lg .info.i-team h3::after{content:none!important}
