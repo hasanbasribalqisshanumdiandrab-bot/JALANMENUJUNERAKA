@@ -260,3 +260,28 @@ body{background:#26292c!important}
     url("bg-sm.jpg") center top/100% auto no-repeat,#26292c!important}
 }
 .brand .logo{flex:0 0 44px;display:block!important}
+
+/* ===== V4: halaman login tanpa panel oranye, logo transparan, teks menempel ===== */
+#login{background:
+  linear-gradient(rgba(8,10,14,.35),rgba(8,10,14,.6)),
+  url("bg.jpg") center top/contain no-repeat,#26292c!important}
+@media (max-width:700px){#login{background:
+  linear-gradient(rgba(8,10,14,.35),rgba(8,10,14,.6)),
+  url("bg-sm.jpg") center top/100% auto no-repeat,#26292c!important}}
+#login::before{display:none!important}
+/* logo: latar gelap hilang (transparan), tanpa kotak/bayangan */
+.lglogo{border-radius:0!important;box-shadow:none!important;background:none!important;
+  mix-blend-mode:lighten;margin:0 auto -10px!important;position:relative;z-index:2}
+/* hilangkan oranye */
+.lg .shape{display:none!important}
+.lg{background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible}
+.lg .info,.lg .info.i-team,.lg .info.i-admin{background:none!important}
+.lg .info{text-shadow:0 2px 10px rgba(0,0,0,.9)}
+.lg .info h3{color:#ffb066}
+/* kotak form transparan */
+.lg .form{background:rgba(10,12,16,.55)!important;backdrop-filter:blur(6px);border-radius:16px}
+@media (max-width:760px){
+  .lg .info{padding:10px 24px 6px!important;text-align:center!important;align-items:center!important}
+  .lg .info h3{font-size:22px}
+  .lg .form{margin-top:8px}
+}
