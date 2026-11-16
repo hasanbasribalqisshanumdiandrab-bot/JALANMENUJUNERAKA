@@ -6,6 +6,7 @@
 <title>Cari Jawaban Soal</title>
 <meta name="theme-color" content="#0d0f14">
 <meta name="robots" content="noindex,nofollow">
+<link rel="icon" type="image/png" href="assets/logo-sm.png">
 <link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
@@ -13,6 +14,7 @@
 <!-- ======================= LOGIN ======================= -->
 <div id="login">
   <div style="width:min(900px,100%);position:relative">
+    <img class="lglogo" src="assets/logo.png" alt="JALANMENUJUNERAKA">
     <div class="lg" id="lg">
       <div class="shape"></div>
 
@@ -71,12 +73,11 @@
   <header class="top">
     <div class="in">
       <div class="brand">
-        <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></div>
+        <div class="logo"><img src="assets/logo-sm.png" alt=""></div>
         <div><b>Cari Jawaban Soal</b><small>Bank soal pelatihan</small></div>
       </div>
       <span class="chip" id="status"><span class="dot"></span><span id="statusTxt">Memuat…</span></span>
-      <span class="chip">Masuk: <b id="whoName">—</b></span>
-      <span class="chip">Sesi <span class="timer" id="timer">2:00:00</span></span>
+            <span class="chip">Sesi <span class="timer" id="timer">2:00:00</span></span>
       <button class="btn btn-sm hidden" id="btnAdminPanel">⚙️ Admin</button>
       <button class="btn btn-sm" id="btnLogout">Keluar</button>
     </div>
@@ -87,52 +88,20 @@
     <main class="main">
       <section class="card">
         <div class="bd">
-          <div class="sec-t">Soal</div>
-          <textarea id="q" spellcheck="false" placeholder="Tempel 1 atau banyak soal sekaligus — format “Question 1, Question 2 …”, bernomor 1. 2. 3., atau dipisah baris kosong."></textarea>
+                    <textarea id="q" spellcheck="false" placeholder="Tempel soal di sini (1 sampai banyak soal sekaligus), atau pakai Foto Soal."></textarea>
           <div class="actions">
             <button class="btn btn-acc" id="go">🔍 Cari Jawaban</button>
             <button class="btn" id="clr">Bersihkan</button>
             <button class="btn" id="pasteBtn">📋 Tempel &amp; Cari</button>
             <button class="btn" id="imgBtn">🖼️ Soal dari Gambar</button>
             <input type="file" id="imgFile" accept="image/jpeg,image/png,image/webp" hidden>
-            <span class="sp"></span>
-          </div>
-          <div class="hint">Hasil muncul otomatis saat mengetik. <kbd>Ctrl</kbd>+<kbd>Enter</kbd> atau tombol Cari menampilkan pop-up ringkasan jawaban. Gambar dibaca dulu ke kotak ini — periksa/koreksi lalu cari ulang bila perlu.</div>
-          <div class="hint" id="ocrNote"></div>
-          <label class="hint" style="display:flex;gap:8px;align-items:flex-start;cursor:pointer"><input type="checkbox" id="autoPaste" style="margin-top:3px"><span><b>Auto-tempel</b>: otomatis tempel &amp; cari dari clipboard saat kotak soal diketuk (kosong) atau saat kembali ke halaman ini. Berlaku di HP dan PC; browser akan meminta izin “tempel” sekali.</span></label>
+                      </div>
+                    <div class="hint" id="ocrNote"></div>
           <div class="hint" id="pasteNote"></div>
         </div>
       </section>
       <section id="out"></section>
     </main>
-
-    <aside class="side">
-      <section class="card">
-        <div class="hd">Bank soal</div>
-        <div class="bd">
-          <div class="stat">
-            <div><small>Total soal</small><b id="srcN">—</b></div>
-            <div><small>Tambahan di perangkat ini</small><b id="srcLocal">0</b></div>
-          </div>
-          <div class="srcline">Sumber: <span id="srcName">—</span><br>Dibangun: <span id="srcDate">—</span></div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="hd">Tambah soal dari Excel</div>
-        <div class="bd">
-          <div class="drop" id="drop">Tarik file ke sini atau <u>klik untuk memilih</u><br><small>XLSX · XLS · XLSM · XLSB · CSV · ODS · ZIP</small></div>
-          <input type="file" id="file" accept=".xlsx,.xls,.xlsm,.xlsb,.csv,.ods,.zip" multiple hidden>
-          <div class="hint">Semua sheet dibaca. Soal baru langsung bisa dicari. Tersimpan di perangkat ini; admin dapat menerbitkannya ke semua pengguna.</div>
-          <div class="rep" id="rep"></div>
-        </div>
-      </section>
-
-      <section class="card">
-        <div class="hd">Referensi AI <button class="btn btn-sm" id="aiBtn">Pengaturan</button></div>
-        <div class="bd"><div class="hint" style="margin:0">Dipakai bila soal tidak ada di bank soal, dan untuk membaca gambar. Memakai API key Anda sendiri (Gemini/Claude) yang disimpan di perangkat ini. Status: <b id="aiState">belum aktif</b></div></div>
-      </section>
-    </aside>
   </div>
 </div>
 
@@ -191,7 +160,8 @@
     <div id="syncState" class="alert warn"></div>
     <div id="pubMsg"></div>
     <div class="tabs">
-      <button class="tab on" data-tab="dev">Perangkat</button>
+      <button class="tab on" data-tab="bank">Bank soal &amp; AI</button>
+      <button class="tab" data-tab="dev">Perangkat</button>
       <button class="tab" data-tab="pin">PIN login</button>
       <button class="tab" data-tab="tm">Authenticator tim</button>
       <button class="tab" data-tab="tot">Authenticator admin</button>
@@ -199,7 +169,21 @@
       <button class="tab" data-tab="pub">Terbitkan ke GitHub</button>
     </div>
 
-    <div id="tab-dev">
+    <div id="tab-bank"><div class="sec-t">Bank soal</div>
+          <div class="stat">
+            <div><small>Total soal</small><b id="srcN">—</b></div>
+            <div><small>Tambahan di perangkat ini</small><b id="srcLocal">0</b></div>
+          </div>
+          <div class="srcline">Sumber: <span id="srcName">—</span><br>Dibangun: <span id="srcDate">—</span></div>
+        <div class="sec-t" style="margin-top:18px">Tambah soal dari Excel</div>
+          <div class="drop" id="drop">Tarik file ke sini atau <u>klik untuk memilih</u><br><small>XLSX · XLS · XLSM · XLSB · CSV · ODS · ZIP</small></div>
+          <input type="file" id="file" accept=".xlsx,.xls,.xlsm,.xlsb,.csv,.ods,.zip" multiple hidden>
+          <div class="hint">Semua sheet dibaca. Soal baru langsung bisa dicari. Tersimpan di perangkat ini; admin dapat menerbitkannya ke semua pengguna.</div>
+          <div class="rep" id="rep"></div>
+        <div class="sec-t" style="margin-top:18px">Referensi AI</div><div class="actions"><button class="btn btn-acc" id="aiBtn">🤖 Pengaturan Referensi AI</button></div><div class="hint" style="margin:0">Status AI: <b id="aiState">belum aktif</b>. Dipakai bila soal tidak ada di bank soal dan untuk membaca gambar.</div><div class="sec-t" style="margin-top:18px">Pencarian</div>
+          <label class="hint" style="display:flex;gap:8px;align-items:flex-start;cursor:pointer"><input type="checkbox" id="autoPaste" style="margin-top:3px"><span><b>Auto-tempel</b>: otomatis tempel &amp; cari dari clipboard saat kotak soal diketuk (kosong) atau saat kembali ke halaman ini. Berlaku di HP dan PC; browser akan meminta izin “tempel” sekali.</span></label></div>
+
+    <div id="tab-dev" class="hidden">
       <div class="note">Daftar HP/PC anggota tim yang login. Klik <b>Putuskan</b> kapan saja: perangkat itu keluar otomatis (±45 detik) dan tidak bisa login lagi sampai Anda klik <b>Izinkan lagi</b>. Setiap login anggota tim tetap meminta kode dari Anda, maksimal 2 jam.</div>
       <div id="devList" class="hidden">
         <div class="actions" style="align-items:center"><b id="devCount">—</b><button class="btn btn-sm" id="devRefresh">Segarkan</button><button class="btn btn-sm btn-danger" id="devCutAll">Putuskan semua yang online</button></div>
