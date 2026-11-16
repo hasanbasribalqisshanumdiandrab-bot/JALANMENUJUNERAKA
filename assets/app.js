@@ -24,7 +24,7 @@
 
   /* ====================== STATE ====================== */
   let KEYS = null, DEK = null, SESS = null;
-  let META = null, ENT = [], exactMap = new Map(), LOCAL_ADDED = 0;
+  let META = null, ENT = [], exactMap = new Map(), LOCAL_ADDED = 0, POST = new Map();
   let tickT = null, LAST = null;
   let tokenOk = null, PEND = null, TSETUP = null, TMSETUP = null, AI_SHARED = null;
   const PIN_ITER = 150000;
@@ -49,11 +49,20 @@
   async function idbSet(v) { try { const d = await idb(); await new Promise((res, rej) => { const t = d.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, 'user'); t.oncomplete = res; t.onerror = () => rej(t.error); }); return true; } catch (e) { return false; } }
 
   /* ====================== BANK SOAL ====================== */
+  function addPost(x) { for (const t of new Set(x.tk)) { const l = POST.get(t); if (l) l.push(x.id); else POST.set(t, [x.id]); } }
+  /** Indeks terbalik: hanya soal yang berbagi cukup banyak kata dengan pertanyaan yang dihitung skornya (jauh lebih cepat, hasil sama). */
+  function candidates(qTok) {
+    const uq = [...new Set(qTok)], N = ENT.length, cnt = new Uint16Array(N); let skipped = 0;
+    for (const t of uq) { const l = POST.get(t); if (!l) continue; if (l.length > N * 0.25) { skipped++; continue; } for (let i = 0; i < l.length; i++) cnt[l[i]]++; }
+    const need = Math.max(1, Math.floor(uq.length * 0.45) - skipped), out = [];
+    for (let i = 0; i < N; i++) if (cnt[i] >= need) out.push(ENT[i]);
+    return out;
+  }
   function indexBank(entries) {
-    ENT = []; exactMap = new Map();
+    ENT = []; exactMap = new Map(); POST = new Map();
     for (const e of entries) {
       const tk = tokenize(e[0]); const x = { id: ENT.length, q: e[0], answers: e.slice(1), tk, key: sortedKey(tk) };
-      ENT.push(x); const l = exactMap.get(x.key); if (l) l.push(x); else exactMap.set(x.key, [x]);
+      ENT.push(x); addPost(x); const l = exactMap.get(x.key); if (l) l.push(x); else exactMap.set(x.key, [x]);
     }
   }
   /** Tambah pasangan baru. Soal yang SUDAH ADA dilewati (isi data lama tidak diubah). */
@@ -70,13 +79,13 @@
         else skipped++;
       } else {
         const e = { id: ENT.length, q, answers: [a], tk, key, fromUpload: true };
-        ENT.push(e); exactMap.set(key, [e]); added++; fresh.push([q, a]);
+        ENT.push(e); addPost(e); exactMap.set(key, [e]); added++; fresh.push([q, a]);
       }
     }
     return { added, skipped, fresh };
   }
   function updateCounts() {
-    $('statusTxt').textContent = 'Siap · ' + ENT.length.toLocaleString('id-ID') + ' soal';
+    $('statusTxt').textContent = SESS && SESS.role === 'admin' ? 'Siap · ' + ENT.length.toLocaleString('id-ID') + ' soal' : 'Siap';
     $('srcN').textContent = ENT.length.toLocaleString('id-ID');
     $('srcLocal').textContent = LOCAL_ADDED.toLocaleString('id-ID');
     if (META) { $('srcName').textContent = META.source; $('srcDate').textContent = META.built; }
@@ -102,6 +111,7 @@
     t = t.replace(/(the\s+correct\s+answers?\s+(is|are)|jawaban\s+(yang\s+)?(benar|tepat)\s+(adalah|ialah)|right\s+answers?\s*:|correct\s+answer\s*:|kunci\s+jawaban)[\s\S]*$/i, ' ');
     t = t.replace(/clear my choice|hapus pilihan saya/gi, ' ');
     t = t.replace(/(^|\n)[ \t]*question text[ \t]*(?=\n|$)/gi, '\n');
+    t = t.replace(/(question|pertanyaan)\s*\d+\s*answer\b\s*:?/gi, ' ');
     t = t.replace(/(^|\s)(question|pertanyaan)\s*\d+/gi, ' ');
     t = t.replace(/not yet answered|belum dijawab|answer saved|marked out of\s*[\d.,]+|points? out of\s*[\d.,]+|flag question|remove flag|tandai pertanyaan|nilai maksimal\s*[\d.,]+/gi, ' ');
     t = t.replace(/select one( or more)?\s*:?|pilih satu( atau lebih)?\s*:?|pilih salah satu\s*:?/gi, ' ');
@@ -110,14 +120,14 @@
   }
   function splitQuestions(raw) {
     const t = raw.replace(/\r/g, '').replace(/\u00a0/g, ' ');
-    const seg = t.split(/clear my choice|hapus pilihan saya/i).map((x) => x.trim()).filter((x) => x.length >= 10);
-    if (seg.length >= 2) return seg.slice(0, MAX_PARTS);
     const re = /(?:^|\n)[ \t]*(?:question|pertanyaan|soal)[ \t]*(\d+)/gi, marks = []; let m, last = null;
     while ((m = re.exec(t))) { if (m[1] !== last) { marks.push(m.index); last = m[1]; } }
     if (marks.length >= 2) {
-      if (marks[0] > 25 && /^\s*(question|pertanyaan|soal)\s*\d+\s*select one/i.test(t.slice(marks[0]))) marks[0] = 0;
+      if (marks[0] > 25 && /^\s*(question|pertanyaan|soal)\s*\d+\s*(select one|answer)/i.test(t.slice(marks[0]))) marks[0] = 0;
       return marks.map((s, i) => t.slice(s, marks[i + 1] ?? t.length).trim()).filter((x) => x.length > 5).slice(0, MAX_PARTS);
     }
+    const seg = t.split(/clear my choice|hapus pilihan saya/i).map((x) => x.trim()).filter((x) => x.length >= 10);
+    if (seg.length >= 2) return seg.slice(0, MAX_PARTS);
     const lines = t.split('\n'), starts = []; let expect = 1;
     lines.forEach((ln, i) => { const mm = ln.match(/^\s*(\d{1,3})\s*[\.\)]\s+\S/); if (mm && +mm[1] === expect && ln.trim().length >= 25) { starts.push(i); expect++; } });
     if (starts.length >= 2) return starts.map((s, i) => lines.slice(s, starts[i + 1] ?? lines.length).join('\n').trim()).slice(0, MAX_PARTS);
@@ -150,7 +160,7 @@
     const ex = exactMap.get(sortedKey(qTok));
     if (ex) return { mode: 'exact', items: ex.map((e) => ({ ...e, score: 1 })), total: ex.length };
     const qf = features(qTok), scored = [];
-    for (const e of ENT) { const s = scoreOf(qTok, e.tk, qf); if (s.score >= MIN_SCORE) scored.push({ ...e, ...s }); }
+    for (const e of candidates(qTok)) { const s = scoreOf(qTok, e.tk, qf); if (s.score >= MIN_SCORE) scored.push({ ...e, ...s }); }
     scored.sort((a, b) => b.score - a.score || b.dice - a.dice);
     return scored.length ? { mode: 'similar', items: scored, total: scored.length } : { mode: 'none', items: [], total: 0 };
   }
@@ -168,7 +178,7 @@
   function searchStem(raw) {
     const qTok = stemTokens(raw); if (qTok.length < 5) return null;
     const qf = features(qTok), scored = [];
-    for (const e of ENT) {
+    for (const e of candidates(qTok)) {
       if (!e.stk) e.stk = tokenize(splitQ(e.q).stem);
       if (e.stk.length < 4) continue;
       const s = scoreOf(qTok, e.stk, qf);
@@ -179,8 +189,10 @@
   }
   function searchText(raw) {
     const r = searchBase(raw);
-    if (r.items.length) return r;
-    return searchStem(raw) || r;
+    if (r.items.length && r.items[0].score >= 0.93) return r;
+    const st = searchStem(raw);
+    if (st && (!r.items.length || st.items[0].score > r.items[0].score + 0.03)) return st;
+    return r;
   }
 
   /* ====================== PILIHAN & HURUF JAWABAN (a/b/c/d/e) ====================== */
@@ -433,16 +445,15 @@
     if (!ENT.length) return;
     $('go').disabled = true; await new Promise((r) => setTimeout(r));
     if (id !== runId) { $('go').disabled = false; return; }
-    const whole = searchText(raw); let parts;
-    if (whole.items.length && whole.items[0].score >= 0.9) parts = [{ text: raw.trim(), res: whole }];
-    else { const texts = splitQuestions(raw); parts = texts.length > 1 ? texts.map((t) => ({ text: t, res: searchText(t) })) : [{ text: raw.trim(), res: whole }]; }
+    const texts = splitQuestions(raw);
+    const parts = texts.length > 1 ? texts.map((t) => ({ text: t, res: searchText(t) })) : [{ text: raw.trim(), res: searchText(raw) }];
     parts.forEach(pickAnswer);
     $('go').disabled = false; LAST = { parts, multi: parts.length > 1 }; renderAll();
     if (explicit) { popupFor(LAST); autoAi(LAST); }
   }
   $('go').onclick = () => run(true);
   $('clr').onclick = () => { $('q').value = ''; LAST = null; renderAll(); runId++; $('ocrNote').textContent = ''; $('q').focus(); };
-  $('q').addEventListener('input', () => { clearTimeout(liveT); liveT = setTimeout(() => run(false), 350); });
+  $('q').addEventListener('input', () => { clearTimeout(liveT); liveT = setTimeout(() => run(false), 150); });
   $('q').addEventListener('paste', () => setTimeout(() => { if ($('q').value.trim().length > 15) { clearTimeout(liveT); run(true); } }, 30));
   $('q').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run(true); } });
 
@@ -470,11 +481,12 @@
   /* ====================== GAMBAR → TEKS ====================== */
   async function shrinkImage(file) {
     try {
-      if (file.size <= 1.5 * 1024 * 1024 || typeof createImageBitmap === 'undefined') return file;
-      const bmp = await createImageBitmap(file), k = Math.min(1, 1800 / Math.max(bmp.width, bmp.height));
+      if (typeof createImageBitmap === 'undefined') return file;
+      const bmp = await createImageBitmap(file), k = Math.min(1, 1500 / Math.max(bmp.width, bmp.height));
+      if (k >= 1 && file.size < 600 * 1024) return file;
       const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width * k); cv.height = Math.round(bmp.height * k);
       cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
-      const blob = await new Promise((r) => cv.toBlob(r, 'image/jpeg', 0.88));
+      const blob = await new Promise((r) => cv.toBlob(r, 'image/jpeg', 0.85));
       return blob && blob.size < file.size ? blob : file;
     } catch (e) { return file; }
   }
@@ -482,10 +494,17 @@
     const buf = new Uint8Array(await file.arrayBuffer());
     return callAI('Kamu mesin OCR. Salin SELURUH teks soal pada gambar apa adanya (soal + semua pilihan jawaban, satu pilihan per baris). Jangan menjawab, jangan menambah komentar.', [{ image: { mime: file.type || 'image/jpeg', data: C.b64(buf) } }, { text: 'Salin teks pada gambar ini.' }]);
   }
-  async function ocrLocal(file) {
-    if (!window.Tesseract) await new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'; s.onload = res; s.onerror = () => rej(new Error('OCR di browser gagal dimuat (butuh internet)')); document.head.appendChild(s); });
-    return (await window.Tesseract.recognize(file, 'ind+eng')).data.text;
+  let ocrP = null;
+  function getOcr() {            // mesin OCR dimuat sekali di latar belakang, lalu dipakai ulang
+    if (ocrP) return ocrP;
+    ocrP = (async () => {
+      if (!window.Tesseract) await new Promise((res, rej) => { const sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'; sc.onload = res; sc.onerror = () => rej(new Error('OCR di browser gagal dimuat (butuh internet)')); document.head.appendChild(sc); });
+      return window.Tesseract.createWorker('ind+eng');
+    })();
+    ocrP.catch(() => { ocrP = null; });
+    return ocrP;
   }
+  async function ocrLocal(file) { const w = await getOcr(); return (await w.recognize(file)).data.text; }
   $('imgBtn').onclick = () => $('imgFile').click();
   $('imgFile').onchange = async (e) => {
     const f0 = e.target.files[0]; e.target.value = ''; if (!f0) return;
@@ -605,12 +624,12 @@
   }
   async function enter() {
     show($('login'), false); show($('app'), true);
-    $('whoName').textContent = SESS.role === 'admin' ? 'Admin · ' + SESS.email : SESS.name;
     show($('btnAdminPanel'), SESS.role === 'admin');
     clearInterval(tickT); tick(); tickT = setInterval(tick, 1000);
     clearInterval(watchT); watchT = setInterval(watchSession, 60000); setTimeout(watchSession, 3000);
     clearInterval(pingT); if (SESS.team) { pingNow(); pingT = setInterval(pingNow, 45000); }
     await loadSharedAi();
+    setTimeout(() => { if (!(getAi() && getAi().key)) getOcr().catch(() => {}); }, 1200);
     try { await loadBank(); } catch (e) { console.error(e); $('status').className = 'chip err'; $('statusTxt').textContent = 'Gagal membuka data: ' + (e.message || e); }
   }
   function loggedOut(note) {
@@ -948,9 +967,9 @@
   });
 
   function showTab(t) {
-    if (t === 'pub-hint') t = 'dev';
+    if (t === 'pub-hint') t = 'bank';
     document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
-    ['dev', 'pin', 'tm', 'tot', 'me', 'pub'].forEach((x) => show($('tab-' + x), t === x));
+    ['bank', 'dev', 'pin', 'tm', 'tot', 'me', 'pub'].forEach((x) => show($('tab-' + x), t === x));
     clearInterval(tmT); clearInterval(devT);
     if (t === 'tm') { tmTick(); tmT = setInterval(tmTick, 1000); }
     if (t === 'dev') devT = setInterval(() => { if (KEYS && KEYS.reg) loadDevices(true); }, 15000);
@@ -963,7 +982,7 @@
     const owner = ls.get('cs_gh_owner') || (h.endsWith('.github.io') ? h.split('.')[0] : '');
     $('ghOwner').value = owner; $('ghRepo').value = ls.get('cs_gh_repo') || (h.endsWith('.github.io') ? (seg && !/\.html?$/.test(seg) ? seg : owner + '.github.io') : '');
     $('ghBranch').value = ls.get('cs_gh_branch') || 'main'; $('ghToken').value = ss.get('cs_gh_token') || ls.get('cs_gh_token_p') || ''; $('ghRemember').checked = !!ls.get('cs_gh_token_p');
-    renderTotp(); renderTeam(); renderPins(); adMsg(''); syncBar(); $('ovAdmin').classList.add('show'); showTab('dev'); renderDevices();
+    renderTotp(); renderTeam(); renderPins(); adMsg(''); syncBar(); $('ovAdmin').classList.add('show'); showTab('bank'); renderDevices();
   }
   function openGate() { $('gatePw').value = ''; msg('gateMsg', ''); $('gateEmail').textContent = SESS.email; $('ovGate').classList.add('show'); setTimeout(() => $('gatePw').focus(), 60); }
   async function submitGate() {
